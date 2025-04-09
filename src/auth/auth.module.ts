@@ -1,16 +1,17 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { RedisModule } from '../redis/redis.module';
 import { AuthController } from './auth.controller';
 import { BcryptUtil } from '../utils/bcrypt.util';
 import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
-import { JwtModule } from '@nestjs/jwt';
+import { WalletModule } from '../wallet/wallet.module';
+import { AuthSessionGuard } from './guards/auth-session.guard';
 
 @Module({
-  imports: [RedisModule, UserModule, JwtModule],
+  imports: [forwardRef(() => UserModule), RedisModule, WalletModule],
   controllers: [AuthController],
-  providers: [AuthRepository, BcryptUtil, AuthService],
-  exports: [AuthRepository, AuthService],
+  providers: [AuthRepository, BcryptUtil, AuthService, AuthSessionGuard],
+  exports: [AuthRepository, AuthService, AuthSessionGuard],
 })
 export class AuthModule {}

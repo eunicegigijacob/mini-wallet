@@ -10,11 +10,7 @@ export class UserRepository {
     private userRepository: Repository<User>,
   ) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
-  }
-
-  async findById(id: number): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { id } });
   }
 
@@ -22,12 +18,16 @@ export class UserRepository {
     return this.userRepository.find({ where: query });
   }
 
+  async findOneUserByQuery(query: Partial<User>): Promise<User | null> {
+    return this.userRepository.findOne({ where: query });
+  }
+
   async create(userData: Partial<User>): Promise<User> {
     const user = this.userRepository.create(userData);
     return this.userRepository.save(user);
   }
 
-  async update(id: number, updateData: Partial<User>): Promise<User | null> {
+  async update(id: string, updateData: Partial<User>): Promise<User | null> {
     await this.userRepository.update(id, updateData);
     return this.findById(id);
   }

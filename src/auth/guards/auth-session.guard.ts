@@ -18,6 +18,7 @@ export class AuthSessionGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly authRepository: AuthRepository,
   ) {}
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
@@ -39,7 +40,6 @@ export class AuthSessionGuard implements CanActivate {
 
   async validateRequest(request: Request): Promise<boolean> {
     const headerBearerToken = (request.headers.authorization as string) ?? null;
-
     const queryBearerToken = (request.query.authorization as string) ?? null;
 
     if (!headerBearerToken && !queryBearerToken)

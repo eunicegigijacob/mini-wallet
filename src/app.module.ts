@@ -7,6 +7,9 @@ import { configs } from './config/index';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { WalletModule } from './wallet/wallet.module';
+import { GuardsModule } from './guards/guards.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -23,9 +26,16 @@ import { UserModule } from './user/user.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    JwtModule.register({
+      global: true,
+      secret: configs.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
+    }),
     RedisModule,
     AuthModule,
     UserModule,
+    WalletModule,
+    GuardsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

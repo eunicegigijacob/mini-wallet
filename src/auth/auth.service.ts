@@ -3,20 +3,22 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from './auth.repository';
 import { DecodedToken } from './interface/decoded-token.interface';
 import { configs } from '../config';
-import { UserService } from '../user/user.service';
 import { UserRepository } from '../user/user.repository';
 import { BcryptUtil } from '../utils/bcrypt.util';
 import { LoginInterface } from './interface/login.interface';
 import { SignupInterface } from './interface/signup.interface';
+import { WalletRepository } from '../wallet/wallet.repository';
+import { ReturnUserService } from '../user/return-user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userService: UserService,
     private readonly authRepository: AuthRepository,
     private readonly userRepository: UserRepository,
     private readonly bcryptUtil: BcryptUtil,
+    private readonly walletRepository: WalletRepository,
+    private readonly returnUserService: ReturnUserService,
   ) {}
 
   checkIfTokenHasExpired(expiryTime: string): boolean {
@@ -92,7 +94,9 @@ export class AuthService {
     phone,
   }: SignupInterface) {
     // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(email);
+    const existingUser = await this.userRepository.findOneUserByQuery({
+      email,
+    });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
@@ -112,18 +116,24 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // create wallet for user
+
+    await this.walletRepository.createWallet({
+      id: newUser.id,
+    });
+
     return {
       status: true,
       message: 'Account created successfully',
       data: {
-        user: await this.userService.returnUser(newUser),
+        user: await this.returnUserService.execute(newUser),
       },
     };
   }
 
   async login({ email, password }: LoginInterface) {
     // Find user by email
-    const user = await this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findOneUserByQuery({ email });
     if (!user) {
       throw new BadRequestException('Invalid credentials');
     }
@@ -146,7 +156,7 @@ export class AuthService {
       status: true,
       message: 'Login successful',
       data: {
-        user: await this.userService.returnUser(user),
+        user: await await this.returnUserService.execute(user),
         tokens: {
           accessToken,
           refreshToken,
