@@ -14,11 +14,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     message = exception?.response?.message ?? exception.message;
 
-    // if (exception.name === MONGO_ERROR) {
-    //   if (exception.code === 11000) {
-    //     message = 'A duplicate resource was provided.';
-    //   }
-    // }
+    if (exception.name === 'QueryFailedError') {
+      if (exception.code === 'ER_DUP_ENTRY') {
+        message = 'A duplicate resource was provided.';
+      }
+    }
 
     console.log(exception);
 

@@ -20,4 +20,6 @@ export const configs = {
   DATABASE_NAME: process.env.DATABASE_NAME,
 
   DATABASE_TYPE: process.env.DATABASE_TYPE || 'mysql',
+
+  REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 };
