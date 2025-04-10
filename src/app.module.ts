@@ -10,6 +10,10 @@ import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
 import { GuardsModule } from './guards/guards.module';
 import { JwtModule } from '@nestjs/jwt';
+import { Transaction } from 'typeorm';
+import { User } from './user/entity/user.entity';
+import { Wallet } from './wallet/entity/wallet.entity';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -25,6 +29,7 @@ import { JwtModule } from '@nestjs/jwt';
       database: configs.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true,
+      entities: [User, Wallet, Transaction],
     }),
     JwtModule.register({
       global: true,
@@ -36,6 +41,7 @@ import { JwtModule } from '@nestjs/jwt';
     UserModule,
     WalletModule,
     GuardsModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -118,9 +118,11 @@ export class AuthService {
 
     // create wallet for user
 
-    await this.walletRepository.createWallet({
-      id: newUser.id,
+    const createdWallet = await this.walletRepository.createWallet({
+      userId: newUser.id,
     });
+
+    console.log('the users wallet', createdWallet);
 
     return {
       status: true,
@@ -152,11 +154,21 @@ export class AuthService {
       id: user.id.toString(),
     });
 
+    const sessionPayload = {
+      id: user.id,
+      email: user.email,
+      walletId: user.wallet.id,
+    };
+
+    await this.authRepository.createSession(user.id, sessionPayload);
+
+    console.log('this is  user,', user);
+
     return {
       status: true,
       message: 'Login successful',
       data: {
-        user: await await this.returnUserService.execute(user),
+        user: await this.returnUserService.execute(user),
         tokens: {
           accessToken,
           refreshToken,

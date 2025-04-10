@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsString } from 'class-validator';
+import { IsOptional, IsNumber, IsString, IsUUID } from 'class-validator';
 
 export class UpdateWalletDto {
   @IsOptional()
@@ -8,4 +8,8 @@ export class UpdateWalletDto {
   @IsOptional()
   @IsString()
   currency?: string;
+
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
 }

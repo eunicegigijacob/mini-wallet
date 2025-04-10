@@ -9,13 +9,21 @@ import { TransactionType } from '../constants';
 import { IFundWallet } from './interface/fund-wallet.interface';
 import { ITransfer } from './interface/transfer.interface';
 import { IWithdrawal } from './interface/withdrawal.interface';
+import { TransactionsRepository } from '../transactions/transactions.repository';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class WalletService {
   constructor(
     @InjectRepository(WalletRepository)
     private walletRepository: WalletRepository,
+    private transactionsRepository: TransactionsRepository,
   ) {}
+
+  generateTransactionRef(): string {
+    // Generate a unique reference using UUID
+    return `TRX-${uuidv4().substring(0, 8).toUpperCase()}`;
+  }
 
   async getWalletById(id: string) {
     const wallet = await this.walletRepository.getWalletById(id);
@@ -48,8 +56,10 @@ export class WalletService {
     }
 
     const updatedWallet = await this.walletRepository.updateWallet(wallet.id, {
-      balance,
+      balance: balance,
     });
+
+    console.log('this is updated', updatedWallet);
     return updatedWallet;
   }
 
@@ -74,6 +84,16 @@ export class WalletService {
         data,
         TransactionType.CREDIT,
       );
+
+      // create credit transaction
+
+      await this.transactionsRepository.createTransaction({
+        walletId: wallet.id,
+        type: TransactionType.CREDIT,
+        reference: this.generateTransactionRef(),
+        narration: 'Wallet funding',
+        amount: data.amount,
+      });
 
       return {
         success: true,
@@ -111,12 +131,28 @@ export class WalletService {
       TransactionType.DEBIT,
     );
 
+    await this.transactionsRepository.createTransaction({
+      walletId: receiverWallet.id,
+      type: TransactionType.DEBIT,
+      reference: this.generateTransactionRef(),
+      narration: `Transfer to ${receiverWallet.user.firstName + receiverWallet.user.lastName}`,
+      amount: data.amount,
+    });
+
     // credit receiver;
 
     await this.updateWalletBalance(
       { walletId: receiverWallet.id, amount },
       TransactionType.CREDIT,
     );
+
+    await this.transactionsRepository.createTransaction({
+      walletId: receiverWallet.id,
+      type: TransactionType.CREDIT,
+      reference: this.generateTransactionRef(),
+      narration: `Transfer from ${senderWallet.user.firstName + senderWallet.user.lastName}`,
+      amount: data.amount,
+    });
 
     return {
       success: true,
@@ -147,10 +183,79 @@ export class WalletService {
       TransactionType.DEBIT,
     );
 
+    await this.transactionsRepository.createTransaction({
+      walletId: wallet.id,
+      type: TransactionType.DEBIT,
+      reference: this.generateTransactionRef(),
+      narration: `Withdrawal`,
+      amount: data.amount,
+    });
+
     return {
       success: true,
       message: 'successful withdrawal',
       data: { updatedWallet },
+    };
+  }
+
+  async getWalletTransactions(walletId: string, filter: any) {
+    const { startDate, endDate, page = 1, limit = 10 } = filter;
+    const validWallet = await this.walletRepository.getWalletById(walletId);
+
+    if (!validWallet) {
+      throw new UnprocessableEntityException('Invalid wallet id');
+    }
+
+    // Calculate offset based on page and limit
+    const offset = (page - 1) * limit;
+
+    // Build query object with optional parameters
+    const query: any = {
+      walletId,
+      limit,
+      offset,
+    };
+
+    // Add date filters if provided
+    if (startDate) {
+      query.startDate = new Date(startDate);
+    }
+
+    if (endDate) {
+      query.endDate = new Date(endDate);
+    }
+
+    const result =
+      await this.transactionsRepository.getTransactionsByFilter(query);
+
+    return {
+      success: true,
+      message: 'Successfully retrieved wallet transactions',
+      data: {
+        transactions: result.transactions,
+        pagination: {
+          total: result.total,
+          page,
+          limit,
+          totalPages: Math.ceil(result.total / limit),
+        },
+      },
+    };
+  }
+
+  async getWalletByUserId(userId: string) {
+    const wallet = await this.walletRepository.getUserWalletByFilter({
+      userId,
+    });
+
+    if (!wallet) {
+      throw new UnprocessableEntityException('Wallet not found for this user');
+    }
+
+    return {
+      success: true,
+      message: 'Successfully retrieved user wallet',
+      data: wallet,
     };
   }
 }

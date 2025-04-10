@@ -38,11 +38,9 @@ export class UserController {
     return this.userService.getWalletBalance(req.user.id);
   }
 
-  // @UseGuards(AuthSessionGuard)
-  // @Get('/wallets/transactions')
-  // async getWalletTransactions(@Request() request: any) {
-  //   return await this.getUserBtcWalletTransactionService.execute({
-  //     user_id: request['user'].id,
-  //   });
-  // }
+  @UseGuards(AuthSessionGuard)
+  @Get('/wallets/transactions')
+  async getWalletTransactions(@Request() req: any) {
+    return await this.userService.getWalletTransactions(req.user.id, req.query);
+  }
 }

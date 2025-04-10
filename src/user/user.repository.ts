@@ -11,15 +11,18 @@ export class UserRepository {
   ) {}
 
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    return this.userRepository.findOne({
+      where: { id },
+      relations: ['wallet'],
+    });
   }
 
   async find(query: Partial<User>): Promise<User[]> {
-    return this.userRepository.find({ where: query });
+    return this.userRepository.find({ where: query, relations: ['wallet'] });
   }
 
   async findOneUserByQuery(query: Partial<User>): Promise<User | null> {
-    return this.userRepository.findOne({ where: query });
+    return this.userRepository.findOne({ where: query, relations: ['wallet'] });
   }
 
   async create(userData: Partial<User>): Promise<User> {

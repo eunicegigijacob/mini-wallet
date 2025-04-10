@@ -26,19 +26,30 @@ export class WalletRepository extends Repository<Wallet> {
     id: string,
     updateWalletDto: UpdateWalletDto,
   ): Promise<Wallet> {
-    await this.walletRepository.update(id, updateWalletDto);
+    const response = await this.walletRepository.update(id, updateWalletDto);
+    console.log('this is repository response', response);
+
     return await this.getWalletById(id);
   }
 
   async getWalletsByFilter(filter: Partial<Wallet>): Promise<Wallet[]> {
-    return await this.walletRepository.find({ where: filter });
+    return await this.walletRepository.find({
+      where: filter,
+      relations: ['user'],
+    });
   }
 
   async getWalletById(id: string): Promise<Wallet> {
-    return await this.walletRepository.findOne({ where: { id } });
+    return await this.walletRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
   }
 
   async getUserWalletByFilter(filter: Partial<Wallet>): Promise<Wallet> {
-    return await this.walletRepository.findOne({ where: filter });
+    return await this.walletRepository.findOne({
+      where: filter,
+      relations: ['user'],
+    });
   }
 }

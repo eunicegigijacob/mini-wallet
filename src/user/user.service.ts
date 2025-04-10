@@ -3,6 +3,7 @@ import { UserRepository } from './user.repository';
 import { User } from './entity/user.entity';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { ReturnUserService } from './return-user.service';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export class UserService {
@@ -10,7 +11,17 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly walletRepository: WalletRepository,
     private readonly returnUser: ReturnUserService,
+    private readonly walletService: WalletService,
   ) {}
+
+  async validateUser(userId: string) {
+    const validUser = await this.userRepository.findById(userId);
+    if (!validUser) {
+      throw new UnprocessableEntityException('Invalid user id');
+    }
+
+    return validUser;
+  }
 
   async createUser(userData: Partial<User>) {
     const user = await this.userRepository.create(userData);
@@ -43,16 +54,13 @@ export class UserService {
     }
     return {
       success: true,
-      message: 'successfully created user',
+      message: 'successfully retrieved user profile',
       data: { user: await this.returnUser.execute(user) },
     };
   }
 
   async updateUser(userId: string, userData: Partial<User>) {
-    const validUser = await this.userRepository.findById(userId);
-    if (!validUser) {
-      throw new UnprocessableEntityException('Invalid user id');
-    }
+    await this.validateUser(userId);
     const user = await this.userRepository.update(userId, userData);
     if (!user) {
       throw new UnprocessableEntityException('Error updating user');
@@ -65,13 +73,10 @@ export class UserService {
   }
 
   async getWalletBalance(userId: string) {
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UnprocessableEntityException('Invalid user, user not found');
-    }
+    const user = await this.validateUser(userId);
 
     const userWallet = await this.walletRepository.getUserWalletByFilter({
-      user,
+      id: user.wallet.id,
     });
 
     if (!userWallet) {
@@ -85,5 +90,11 @@ export class UserService {
         balance: userWallet.balance,
       },
     };
+  }
+
+  async getWalletTransactions(userId: string, query: any) {
+    const user = await this.validateUser(userId);
+
+    return this.walletService.getWalletTransactions(user.wallet.id, query);
   }
 }

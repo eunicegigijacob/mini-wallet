@@ -49,6 +49,8 @@ export class AuthSessionGuard implements CanActivate {
 
     const authToken = queryBearerToken ?? headerBearerToken.split(' ')[1];
 
+    console.log('token', authToken);
+
     if (!authToken)
       throw new UnauthorizedException(
         'Auth token not found in Authorization header.',

@@ -28,7 +28,7 @@ export class User {
   @Column()
   phone: string;
 
-  @OneToOne(() => Wallet, (wallet) => wallet.user)
+  @OneToOne(() => Wallet, (wallet) => wallet.user, { eager: true })
   wallet: Wallet;
 
   @CreateDateColumn()

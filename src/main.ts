@@ -11,7 +11,7 @@ async function bootstrap() {
 
   app.set('trust proxy', 1);
 
-  app.setGlobalPrefix('/api/v1');
+  app.setGlobalPrefix('/v1');
 
   app.enableCors({
     credentials: true,
